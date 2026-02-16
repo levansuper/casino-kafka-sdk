@@ -3,10 +3,6 @@ import { Logger } from './logger';
 
 export enum FinancialEvent {
   Transaction = 'financial-event.transaction',
-  Win = 'financial-event.win',
-  Loss = 'financial-event.loss',
-  Deposit = 'financial-event.deposit',
-  Withdrawal = 'financial-event.withdrawal',
 }
 
 export enum UserEvent {
@@ -27,36 +23,24 @@ export type Topic = FinancialEvent | UserEvent | ServerEvent;
 // --- Financial event payloads ---
 
 export interface TransactionData {
-  userId: string;
-  amount: number;
-  currency: string;
+  casinoId: number;
   transactionId: string;
-}
-
-export interface WinData {
-  userId: string;
-  amount: number;
-  gameId: string;
-}
-
-export interface LossData {
-  userId: string;
-  amount: number;
-  gameId: string;
-}
-
-export interface DepositData {
-  userId: string;
-  amount: number;
-  currency: string;
-  method: string;
-}
-
-export interface WithdrawalData {
-  userId: string;
-  amount: number;
-  currency: string;
-  method: string;
+  userId: number;
+  tokenCode: string;
+  tokenAmount: string;
+  fiatCode: string | null;
+  fiatAmount: string | null;
+  usdAmount: string | null;
+  exchangeRate: string | null;
+  type: string;
+  balanceBefore: string;
+  balanceAfter: string;
+  status: string;
+  referenceId: string | null;
+  description: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+  completedAt: string | null;
 }
 
 // --- User event payloads ---
@@ -101,10 +85,6 @@ export interface RestartData {
 
 export interface TopicDataMap {
   [FinancialEvent.Transaction]: TransactionData;
-  [FinancialEvent.Win]: WinData;
-  [FinancialEvent.Loss]: LossData;
-  [FinancialEvent.Deposit]: DepositData;
-  [FinancialEvent.Withdrawal]: WithdrawalData;
   [UserEvent.Login]: LoginData;
   [UserEvent.Logout]: LogoutData;
   [UserEvent.Register]: RegisterData;
