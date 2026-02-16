@@ -10,6 +10,7 @@ A type-safe Kafka SDK for the Casino platform, built on top of [KafkaJS](https:/
 - **Batch sending** — send multiple messages to a topic in a single call
 - **Concurrency control** — sequential or parallel partition processing for consumers
 - **Configurable error handling** — propagate errors to KafkaJS for retry, or log and swallow them
+- **Topic provisioning** — ensure topics exist before producing or consuming
 - **Dual module output** — works with both ESM (`import`) and CommonJS (`require`)
 
 ## Installation
@@ -27,6 +28,15 @@ const client = new KafkaClient({
   brokers: ['localhost:9092'],
   clientId: 'casino-example',
 });
+
+// --- Ensure topics exist ---
+await client.ensureTopics([
+  FinancialEvent.Transaction,
+  FinancialEvent.Deposit,
+  FinancialEvent.Withdrawal,
+  FinancialEvent.Win,
+  FinancialEvent.Loss,
+]);
 
 // --- Producer ---
 const producer = client.createProducer();
@@ -76,6 +86,30 @@ const client = new KafkaClient({
 |---|---|---|
 | `createProducer(config?)` | `SdkProducer` | Create a new producer instance |
 | `createConsumer(config)` | `SdkConsumer` | Create a new consumer instance |
+| `ensureTopics(topics, options?)` | `Promise<boolean>` | Create topics if they don't already exist |
+
+#### `ensureTopics(topics, options?)`
+
+Creates the given topics on the broker if they don't already exist. Returns `true` if new topics were created, `false` if they all existed already. Connects an admin client internally and disconnects it when done.
+
+```ts
+// With defaults (1 partition, replication factor 1)
+await client.ensureTopics([
+  FinancialEvent.Transaction,
+  FinancialEvent.Deposit,
+]);
+
+// With custom partitions / replication
+await client.ensureTopics(
+  [ServerEvent.Crash, ServerEvent.HealthCheck],
+  { numPartitions: 3, replicationFactor: 2 },
+);
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `numPartitions` | `number` | `1` | Number of partitions per topic |
+| `replicationFactor` | `number` | `1` | Replication factor per topic |
 
 ### `SdkProducer`
 
