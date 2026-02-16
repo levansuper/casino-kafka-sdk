@@ -1,4 +1,5 @@
 import { KafkaConfig, logLevel } from 'kafkajs';
+import { Logger } from './logger';
 
 export enum FinancialEvent {
   Transaction = 'financial-event.transaction',
@@ -117,6 +118,7 @@ export interface KafkaClientConfig {
   brokers: string[];
   clientId: string;
   logLevel?: logLevel;
+  logger?: Logger;
   /** Pass-through for any additional KafkaJS config */
   kafkaOptions?: Partial<KafkaConfig>;
 }
@@ -146,6 +148,7 @@ export interface Serializer<T = unknown> {
 
 export interface ProducerConfig {
   serializer?: Serializer;
+  logger?: Logger;
 }
 
 export interface ConsumerConfig {
@@ -157,6 +160,7 @@ export interface ConsumerConfig {
   sequential?: boolean;
   /** When true, handler errors propagate to KafkaJS so the offset is not committed. When false, errors are logged and swallowed. Default: true */
   propagateErrors?: boolean;
+  logger?: Logger;
 }
 
 export interface SubscribeOptions {

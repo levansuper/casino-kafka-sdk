@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SdkConsumer } from '../src/consumer';
 import { FinancialEvent, UserEvent, type ConsumedMessage } from '../src/types';
+import type { Logger } from '../src/logger';
 
 function createMockConsumer() {
   return {
@@ -200,9 +201,9 @@ describe('SdkConsumer', () => {
       ).rejects.toThrow('handler boom');
     });
 
-    it('should swallow handler errors when propagateErrors is false', async () => {
-      const swallowConsumer = new SdkConsumer(mockConsumer as any, undefined, undefined, false);
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    it('should swallow handler errors when propagateErrors is false and log via logger', async () => {
+      const mockLogger = { error: vi.fn(), info: vi.fn(), debug: vi.fn() };
+      const swallowConsumer = new SdkConsumer(mockConsumer as any, undefined, undefined, false, mockLogger);
       const handler = vi.fn().mockRejectedValueOnce(new Error('handler boom'));
 
       await swallowConsumer.subscribe(UserEvent.Login, handler);
@@ -220,10 +221,11 @@ describe('SdkConsumer', () => {
         },
       });
 
-      expect(consoleSpy).toHaveBeenCalledOnce();
-      expect(consoleSpy.mock.calls[0][0]).toContain('user-event.login');
-      expect(consoleSpy.mock.calls[0][0]).toContain('offset 5');
-      consoleSpy.mockRestore();
+      expect(mockLogger.error).toHaveBeenCalled();
+      expect(mockLogger.error.mock.calls[0][0]).toContain('Error processing message');
+      expect(mockLogger.error.mock.calls[0][1]).toEqual(
+        expect.objectContaining({ topic: 'user-event.login', offset: '5' }),
+      );
     });
   });
 
@@ -241,6 +243,142 @@ describe('SdkConsumer', () => {
 
       const runConfig = mockConsumer.run.mock.calls[0][0];
       expect(runConfig.partitionsConsumedConcurrently).toBe(5);
+    });
+  });
+
+  describe('logger', () => {
+    let mockLogger: Logger;
+
+    beforeEach(() => {
+      mockLogger = { error: vi.fn(), info: vi.fn(), debug: vi.fn() };
+    });
+
+    it('should log info on connect and disconnect', async () => {
+      const c = new SdkConsumer(mockConsumer as any, undefined, undefined, undefined, mockLogger);
+      await c.connect();
+      await c.disconnect();
+
+      const infoCalls = (mockLogger.info as ReturnType<typeof vi.fn>).mock.calls;
+      expect(infoCalls[0][0]).toBe('Consumer connecting');
+      expect(infoCalls[1][0]).toBe('Consumer connected');
+      expect(infoCalls[2][0]).toBe('Consumer disconnecting');
+      expect(infoCalls[3][0]).toBe('Consumer disconnected');
+    });
+
+    it('should log error on connect failure', async () => {
+      mockConsumer.connect.mockRejectedValueOnce(new Error('broker unreachable'));
+      const c = new SdkConsumer(mockConsumer as any, undefined, undefined, undefined, mockLogger);
+
+      await expect(c.connect()).rejects.toThrow();
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to connect consumer',
+        expect.objectContaining({ error: 'broker unreachable' }),
+      );
+    });
+
+    it('should log info on subscribe with topic details', async () => {
+      const c = new SdkConsumer(mockConsumer as any, undefined, undefined, undefined, mockLogger);
+      await c.subscribe(UserEvent.Login, vi.fn(), { fromBeginning: true });
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Subscribing to topic',
+        { topic: 'user-event.login', fromBeginning: true },
+      );
+    });
+
+    it('should log info on consumer start with topics and concurrency', async () => {
+      const c = new SdkConsumer(mockConsumer as any, undefined, 3, undefined, mockLogger);
+      await c.subscribe(FinancialEvent.Win, vi.fn());
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Consumer starting',
+        { topics: ['financial-event.win'], concurrency: 3 },
+      );
+    });
+
+    it('should log debug on message processing', async () => {
+      const handler = vi.fn();
+      const c = new SdkConsumer(mockConsumer as any, undefined, undefined, undefined, mockLogger);
+      await c.subscribe(UserEvent.Login, handler);
+
+      const eachMessage = mockConsumer.run.mock.calls[0][0].eachMessage;
+      await eachMessage({
+        topic: 'user-event.login',
+        partition: 2,
+        message: {
+          offset: '99',
+          key: Buffer.from('user-1'),
+          value: Buffer.from(JSON.stringify({ userId: 'user-1', ip: '10.0.0.1' })),
+          headers: {},
+          timestamp: '1700000000000',
+        },
+      });
+
+      const debugCalls = (mockLogger.debug as ReturnType<typeof vi.fn>).mock.calls;
+      expect(debugCalls[0][0]).toBe('Processing message');
+      expect(debugCalls[0][1]).toEqual({
+        topic: 'user-event.login',
+        partition: 2,
+        offset: '99',
+        key: 'user-1',
+      });
+      expect(debugCalls[1][0]).toBe('Message processed');
+      expect(debugCalls[1][1]).toEqual({
+        topic: 'user-event.login',
+        partition: 2,
+        offset: '99',
+      });
+    });
+
+    it('should log error on handler failure and still propagate', async () => {
+      const handler = vi.fn().mockRejectedValueOnce(new Error('handler boom'));
+      const c = new SdkConsumer(mockConsumer as any, undefined, undefined, true, mockLogger);
+      await c.subscribe(UserEvent.Login, handler);
+
+      const eachMessage = mockConsumer.run.mock.calls[0][0].eachMessage;
+      await expect(
+        eachMessage({
+          topic: 'user-event.login',
+          partition: 0,
+          message: {
+            offset: '5',
+            key: null,
+            value: Buffer.from(JSON.stringify({ userId: 'u1', ip: '1.1.1.1' })),
+            headers: {},
+            timestamp: '1700000000000',
+          },
+        }),
+      ).rejects.toThrow('handler boom');
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error processing message',
+        expect.objectContaining({
+          topic: 'user-event.login',
+          partition: 0,
+          offset: '5',
+          error: 'handler boom',
+        }),
+      );
+    });
+
+    it('should not log to console when no logger is provided (noopLogger)', async () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+      const c = new SdkConsumer(mockConsumer as any);
+      await c.connect();
+      await c.subscribe(FinancialEvent.Win, vi.fn());
+      await c.disconnect();
+
+      expect(consoleSpy).not.toHaveBeenCalled();
+      expect(errorSpy).not.toHaveBeenCalled();
+      expect(debugSpy).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+      errorSpy.mockRestore();
+      debugSpy.mockRestore();
     });
   });
 });

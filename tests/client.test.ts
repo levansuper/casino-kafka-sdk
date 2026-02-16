@@ -3,6 +3,7 @@ import { KafkaClient } from '../src/client';
 import { SdkProducer } from '../src/producer';
 import { SdkConsumer } from '../src/consumer';
 import { FinancialEvent, ServerEvent } from '../src/types';
+import type { Logger } from '../src/logger';
 
 const mockAdmin = {
   connect: vi.fn(),
@@ -145,6 +146,111 @@ describe('KafkaClient', () => {
 
       await expect(client.ensureTopics([FinancialEvent.Loss])).rejects.toThrow('broker error');
       expect(mockAdmin.disconnect).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('logger', () => {
+    let mockLogger: Logger;
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      mockLogger = { error: vi.fn(), info: vi.fn(), debug: vi.fn() };
+    });
+
+    it('should log info on client creation with clientId and brokers', () => {
+      new KafkaClient({
+        brokers: ['localhost:9092'],
+        clientId: 'test-app',
+        logger: mockLogger,
+      });
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'KafkaClient created',
+        { clientId: 'test-app', brokers: ['localhost:9092'] },
+      );
+    });
+
+    it('should log info on ensureTopics', async () => {
+      mockAdmin.createTopics.mockResolvedValue(true);
+      const client = new KafkaClient({
+        brokers: ['localhost:9092'],
+        clientId: 'test',
+        logger: mockLogger,
+      });
+
+      await client.ensureTopics([FinancialEvent.Transaction, ServerEvent.Crash], {
+        numPartitions: 3,
+        replicationFactor: 2,
+      });
+
+      const infoCalls = (mockLogger.info as ReturnType<typeof vi.fn>).mock.calls;
+      expect(infoCalls[1][0]).toBe('Ensuring topics exist');
+      expect(infoCalls[1][1]).toEqual({
+        topics: [FinancialEvent.Transaction, ServerEvent.Crash],
+        numPartitions: 3,
+        replicationFactor: 2,
+      });
+      expect(infoCalls[2][0]).toBe('ensureTopics completed');
+      expect(infoCalls[2][1]).toEqual({ created: true });
+    });
+
+    it('should pass logger to created producer', () => {
+      const client = new KafkaClient({
+        brokers: ['localhost:9092'],
+        clientId: 'test',
+        logger: mockLogger,
+      });
+
+      const producer = client.createProducer();
+      expect(producer).toBeInstanceOf(SdkProducer);
+    });
+
+    it('should pass logger to created consumer', () => {
+      const client = new KafkaClient({
+        brokers: ['localhost:9092'],
+        clientId: 'test',
+        logger: mockLogger,
+      });
+
+      const consumer = client.createConsumer({ groupId: 'test-group' });
+      expect(consumer).toBeInstanceOf(SdkConsumer);
+    });
+
+    it('should not log when no logger is provided', () => {
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      new KafkaClient({ brokers: ['localhost:9092'], clientId: 'test' });
+
+      expect(consoleSpy).not.toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should allow per-producer logger override', () => {
+      const clientLogger: Logger = { error: vi.fn(), info: vi.fn(), debug: vi.fn() };
+      const producerLogger: Logger = { error: vi.fn(), info: vi.fn(), debug: vi.fn() };
+
+      const client = new KafkaClient({
+        brokers: ['localhost:9092'],
+        clientId: 'test',
+        logger: clientLogger,
+      });
+
+      const producer = client.createProducer({ logger: producerLogger });
+      expect(producer).toBeInstanceOf(SdkProducer);
+    });
+
+    it('should allow per-consumer logger override', () => {
+      const clientLogger: Logger = { error: vi.fn(), info: vi.fn(), debug: vi.fn() };
+      const consumerLogger: Logger = { error: vi.fn(), info: vi.fn(), debug: vi.fn() };
+
+      const client = new KafkaClient({
+        brokers: ['localhost:9092'],
+        clientId: 'test',
+        logger: clientLogger,
+      });
+
+      const consumer = client.createConsumer({ groupId: 'test-group', logger: consumerLogger });
+      expect(consumer).toBeInstanceOf(SdkConsumer);
     });
   });
 });
