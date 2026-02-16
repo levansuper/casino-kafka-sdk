@@ -1,0 +1,39 @@
+{
+  "name": "casino-kafka-sdk",
+  "version": "1.0.0",
+  "description": "Simple Kafka SDK for Casino platform",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --reporter=verbose",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "kafka",
+    "sdk",
+    "casino"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
