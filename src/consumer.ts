@@ -76,7 +76,6 @@ export class SdkConsumer {
     });
 
     this.handlers.set(topic, handler);
-    await this.run();
   }
 
   async run(): Promise<void> {
