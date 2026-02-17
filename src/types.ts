@@ -55,8 +55,14 @@ export interface LogoutData {
 }
 
 export interface RegisterData {
-  userId: string;
-  email: string;
+  oddsId: number;
+  oddsUserId: string;
+  email: string | null;
+  username: string | null;
+  signupMethod: string;
+  ipAddress: string | null;
+  referByUserId: number | null;
+  createdAt: string;
 }
 
 export interface SessionExpiredData {
