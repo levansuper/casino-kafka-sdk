@@ -9,6 +9,7 @@ export enum UserEvent {
   Login = 'user-event.login',
   Logout = 'user-event.logout',
   Register = 'user-event.register',
+  Update = 'user-event.update',
   SessionExpired = 'user-event.session-expired',
   DataRequest = 'user-event.data-request',
   DataResponse = 'user-event.data-response',
@@ -106,6 +107,7 @@ export interface TopicDataMap {
   [UserEvent.Login]: LoginData;
   [UserEvent.Logout]: LogoutData;
   [UserEvent.Register]: RegisterData;
+  [UserEvent.Update]: RegisterData;
   [UserEvent.SessionExpired]: SessionExpiredData;
   [UserEvent.DataRequest]: UserDataRequestData;
   [UserEvent.DataResponse]: UserDataResponseData;
