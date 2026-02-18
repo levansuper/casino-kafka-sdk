@@ -10,6 +10,8 @@ export enum UserEvent {
   Logout = 'user-event.logout',
   Register = 'user-event.register',
   SessionExpired = 'user-event.session-expired',
+  DataRequest = 'user-event.data-request',
+  DataResponse = 'user-event.data-response',
 }
 
 export enum ServerEvent {
@@ -70,6 +72,16 @@ export interface SessionExpiredData {
   sessionId: string;
 }
 
+export interface UserDataRequestData {
+  userIds: number[];
+  requestId: string;
+}
+
+export interface UserDataResponseData {
+  requestId: string;
+  users: RegisterData[];
+}
+
 // --- Server event payloads ---
 
 export interface CrashData {
@@ -95,6 +107,8 @@ export interface TopicDataMap {
   [UserEvent.Logout]: LogoutData;
   [UserEvent.Register]: RegisterData;
   [UserEvent.SessionExpired]: SessionExpiredData;
+  [UserEvent.DataRequest]: UserDataRequestData;
+  [UserEvent.DataResponse]: UserDataResponseData;
   [ServerEvent.Crash]: CrashData;
   [ServerEvent.HealthCheck]: HealthCheckData;
   [ServerEvent.Restart]: RestartData;

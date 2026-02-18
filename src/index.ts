@@ -13,6 +13,8 @@ export type {
   LogoutData,
   RegisterData,
   SessionExpiredData,
+  UserDataRequestData,
+  UserDataResponseData,
   CrashData,
   HealthCheckData,
   RestartData,
