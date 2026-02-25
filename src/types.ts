@@ -41,6 +41,8 @@ export interface TransactionData {
   status: string;
   referenceId: string | null;
   description: string | null;
+  gameId: string | null;
+  gameName: string | null;
   metadata: Record<string, unknown> | null;
   createdAt: string;
   completedAt: string | null;
