@@ -13,6 +13,8 @@ export enum UserEvent {
   SessionExpired = 'user-event.session-expired',
   DataRequest = 'user-event.data-request',
   DataResponse = 'user-event.data-response',
+  XpUpdate = 'user-event.xp-update',
+  LevelUp = 'user-event.level-up',
 }
 
 export enum ServerEvent {
@@ -92,6 +94,32 @@ export interface UserDataResponseData {
   users: RegisterData[];
 }
 
+// --- XP & Level-up event payloads ---
+
+export interface XpUpdateData {
+  userId: number;
+  clientId: string;
+  xpGained: number;
+  totalExperience: number;
+  bonusExperience: number;
+  tier: string;
+  rating: number;
+  timestamp: string;
+}
+
+export interface LevelUpData {
+  userId: number;
+  clientId: string;
+  oldTier: string;
+  oldRating: number;
+  newTier: string;
+  newRating: number;
+  totalExperience: number;
+  bonusExperience: number;
+  rewardIds: number[];
+  timestamp: string;
+}
+
 // --- Server event payloads ---
 
 export interface CrashData {
@@ -120,6 +148,8 @@ export interface TopicDataMap {
   [UserEvent.SessionExpired]: SessionExpiredData;
   [UserEvent.DataRequest]: UserDataRequestData;
   [UserEvent.DataResponse]: UserDataResponseData;
+  [UserEvent.XpUpdate]: XpUpdateData;
+  [UserEvent.LevelUp]: LevelUpData;
   [ServerEvent.Crash]: CrashData;
   [ServerEvent.HealthCheck]: HealthCheckData;
   [ServerEvent.Restart]: RestartData;

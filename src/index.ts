@@ -15,6 +15,8 @@ export type {
   SessionExpiredData,
   UserDataRequestData,
   UserDataResponseData,
+  XpUpdateData,
+  LevelUpData,
   CrashData,
   HealthCheckData,
   RestartData,
