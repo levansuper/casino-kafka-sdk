@@ -15,6 +15,7 @@ export enum UserEvent {
   DataResponse = 'user-event.data-response',
   XpUpdate = 'user-event.xp-update',
   LevelUp = 'user-event.level-up',
+  RewardUpdate = 'user-event.reward-update',
 }
 
 export enum ServerEvent {
@@ -120,6 +121,42 @@ export interface LevelUpData {
   timestamp: string;
 }
 
+// --- Reward event payloads ---
+
+export interface RewardItemData {
+  id: number;
+  name: string;
+  rewardConfigId: number;
+  rewardConfig: {
+    name?: string;
+    type: string;
+    claimableRewardList: any[] | null;
+    isAutoclaimable?: boolean;
+    description?: string | null;
+    imageUrl?: string | null;
+  } | null;
+  status: string;
+  availableStartDate: string | null;
+  availableEndDate: string | null;
+  grantDate: string | null;
+  claimStartDate: string | null;
+  claimEndDate: string | null;
+  claimDate: string | null;
+  xpNeeded: number;
+  xpAccumulated: number;
+  progress: Record<string, any> | null;
+  claimedRewardList: any[] | null;
+  createdAt: string;
+}
+
+export interface RewardUpdateSignal {
+  userId: number;
+  clientId: string;
+  reason: 'rakeback_accumulated' | 'reward_assigned' | 'reward_claimed';
+  reward: RewardItemData;
+  timestamp: string;
+}
+
 // --- Server event payloads ---
 
 export interface CrashData {
@@ -150,6 +187,7 @@ export interface TopicDataMap {
   [UserEvent.DataResponse]: UserDataResponseData;
   [UserEvent.XpUpdate]: XpUpdateData;
   [UserEvent.LevelUp]: LevelUpData;
+  [UserEvent.RewardUpdate]: RewardUpdateSignal;
   [ServerEvent.Crash]: CrashData;
   [ServerEvent.HealthCheck]: HealthCheckData;
   [ServerEvent.Restart]: RestartData;

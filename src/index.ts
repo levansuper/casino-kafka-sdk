@@ -17,6 +17,8 @@ export type {
   UserDataResponseData,
   XpUpdateData,
   LevelUpData,
+  RewardUpdateSignal,
+  RewardItemData,
   CrashData,
   HealthCheckData,
   RestartData,
