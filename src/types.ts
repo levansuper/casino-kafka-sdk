@@ -68,8 +68,8 @@ export interface LogoutData {
 }
 
 export interface RegisterData {
-  oddsId: number;
-  oddsUserId: string;
+  userId: number;
+  userGuid: string;
   email: string | null;
   username: string | null;
   signupMethod: string;
