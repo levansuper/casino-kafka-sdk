@@ -70,7 +70,7 @@ describe('ConsoleLogger', () => {
     logger.error('connection failed', { broker: 'localhost:9092' });
 
     expect(spy).toHaveBeenCalledWith(
-      '[casino-kafka-sdk] ERROR: connection failed',
+      '[ybc-shared-lib] ERROR: connection failed',
       { broker: 'localhost:9092' },
     );
     spy.mockRestore();

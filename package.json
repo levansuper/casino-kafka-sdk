@@ -1,5 +1,5 @@
 {
-  "name": "casino-kafka-sdk",
+  "name": "ybc-shared-lib",
   "version": "1.0.0",
   "description": "Simple Kafka SDK for Casino platform",
   "main": "./dist/index.js",
@@ -17,9 +17,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run --reporter=verbose",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run build"
+    "test": "vitest run --reporter=verbose"
   },
   "keywords": [
     "kafka",

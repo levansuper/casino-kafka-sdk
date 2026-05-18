@@ -1,4 +1,4 @@
-# casino-kafka-sdk
+# ybc-shared-lib
 
 A type-safe Kafka SDK for the Casino platform, built on top of [KafkaJS](https://kafka.js.org/). Provides strongly-typed producers and consumers with predefined event types and data schemas for financial, user, and server events.
 
@@ -16,13 +16,13 @@ A type-safe Kafka SDK for the Casino platform, built on top of [KafkaJS](https:/
 ## Installation
 
 ```bash
-npm install casino-kafka-sdk
+npm install ybc-shared-lib
 ```
 
 ## Quick Start
 
 ```ts
-import { KafkaClient, UserEvent, FinancialEvent } from 'casino-kafka-sdk';
+import { KafkaClient, UserEvent, FinancialEvent } from 'ybc-shared-lib';
 
 const client = new KafkaClient({
   brokers: ['localhost:9092'],
@@ -186,7 +186,7 @@ async (message: ConsumedMessage<T>) => void
 Default serializer. Converts data to/from JSON via `Buffer`.
 
 ```ts
-import { JsonSerializer } from 'casino-kafka-sdk';
+import { JsonSerializer } from 'ybc-shared-lib';
 
 const serializer = new JsonSerializer();
 const buf = serializer.serialize({ foo: 'bar' }); // Buffer

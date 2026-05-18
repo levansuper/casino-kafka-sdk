@@ -20,19 +20,19 @@ export class ConsoleLogger implements Logger {
 
   error(message: string, extra?: Record<string, unknown>): void {
     if (this.level >= SdkLogLevel.ERROR) {
-      console.error(`[casino-kafka-sdk] ERROR: ${message}`, extra ?? '');
+      console.error(`[ybc-shared-lib] ERROR: ${message}`, extra ?? '');
     }
   }
 
   info(message: string, extra?: Record<string, unknown>): void {
     if (this.level >= SdkLogLevel.INFO) {
-      console.log(`[casino-kafka-sdk] INFO: ${message}`, extra ?? '');
+      console.log(`[ybc-shared-lib] INFO: ${message}`, extra ?? '');
     }
   }
 
   debug(message: string, extra?: Record<string, unknown>): void {
     if (this.level >= SdkLogLevel.DEBUG) {
-      console.debug(`[casino-kafka-sdk] DEBUG: ${message}`, extra ?? '');
+      console.debug(`[ybc-shared-lib] DEBUG: ${message}`, extra ?? '');
     }
   }
 }
